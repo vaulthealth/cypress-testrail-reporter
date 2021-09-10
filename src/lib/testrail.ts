@@ -180,8 +180,10 @@ export class TestRail {
   public uploadScreenshots (caseId, resultId) {
     const SCREENSHOTS_FOLDER_PATH = path.join(__dirname, 'cypress/screenshots');
 
-    fs.readdir(SCREENSHOTS_FOLDER_PATH, (err, folder) => {
-      folder.forEach(folder => {
+    fs.readdir(SCREENSHOTS_FOLDER_PATH, (err, folders) => {
+      console.log("Found screenshots for following sections:");
+      console.debug(folders);
+      folders.forEach(folder => {
         fs.readdir(SCREENSHOTS_FOLDER_PATH + `/${folder}`, (err, spec) => {
           spec.forEach(spec => {
             fs.readdir(SCREENSHOTS_FOLDER_PATH + `/${folder}/${spec}`, (err, file) => {
