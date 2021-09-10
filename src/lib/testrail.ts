@@ -178,7 +178,7 @@ export class TestRail {
 
   // This function will attach failed screenshot on each test result(comment) if founds it
   public uploadScreenshots (caseId, resultId) {
-    const SCREENSHOTS_FOLDER_PATH = path.join(__dirname, '../../monorepo/cypress/screenshots');
+    const SCREENSHOTS_FOLDER_PATH = path.join(__dirname, 'cypress/screenshots');
 
     fs.readdir(SCREENSHOTS_FOLDER_PATH, (err, folder) => {
       folder.forEach(folder => {
@@ -206,32 +206,6 @@ export class TestRail {
       })
     });
   };
-
-  //
-  // fs.readdir(SCREENSHOTS_FOLDER_PATH + `/${folder}`, (err, file) => {
-  //         if (err) {
-  //           return console.log('Unable to scan screenshots folder: ' + err);
-  //         }
-  //
-  //         console.log("Found following screenshots");
-  //         console.debug(file);
-  //
-  //
-  //       })
-  //
-
-
-  //
-  // file.forEach(file => {
-  //           if (file.includes(`C${caseId}`) && /(failed|attempt)/g.test(file)) {
-  //             try {
-  //               this.uploadAttachment(resultId, SCREENSHOTS_FOLDER_PATH + file)
-  //             } catch (err) {
-  //               console.log('Screenshot upload error: ', err)
-  //             }
-  //           }
-  //         });
-  //
 
   public closeRun() {
     this.runId = TestRailCache.retrieve('runId');
