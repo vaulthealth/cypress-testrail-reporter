@@ -179,9 +179,11 @@ var TestRail = /** @class */ (function () {
     // This function will attach failed screenshot on each test result(comment) if founds it
     TestRail.prototype.uploadScreenshots = function (caseId, resultId) {
         var _this = this;
-        var SCREENSHOTS_FOLDER_PATH = path.join(__dirname, '../../monorepo/cypress/screenshots');
-        fs.readdir(SCREENSHOTS_FOLDER_PATH, function (err, folder) {
-            folder.forEach(function (folder) {
+        var SCREENSHOTS_FOLDER_PATH = path.join(__dirname, 'cypress/screenshots');
+        fs.readdir(SCREENSHOTS_FOLDER_PATH, function (err, folders) {
+            console.log("Found screenshots for following sections:");
+            console.debug(folders);
+            folders.forEach(function (folder) {
                 fs.readdir(SCREENSHOTS_FOLDER_PATH + ("/" + folder), function (err, spec) {
                     spec.forEach(function (spec) {
                         fs.readdir(SCREENSHOTS_FOLDER_PATH + ("/" + folder + "/" + spec), function (err, file) {
@@ -207,29 +209,6 @@ var TestRail = /** @class */ (function () {
         });
     };
     ;
-    //
-    // fs.readdir(SCREENSHOTS_FOLDER_PATH + `/${folder}`, (err, file) => {
-    //         if (err) {
-    //           return console.log('Unable to scan screenshots folder: ' + err);
-    //         }
-    //
-    //         console.log("Found following screenshots");
-    //         console.debug(file);
-    //
-    //
-    //       })
-    //
-    //
-    // file.forEach(file => {
-    //           if (file.includes(`C${caseId}`) && /(failed|attempt)/g.test(file)) {
-    //             try {
-    //               this.uploadAttachment(resultId, SCREENSHOTS_FOLDER_PATH + file)
-    //             } catch (err) {
-    //               console.log('Screenshot upload error: ', err)
-    //             }
-    //           }
-    //         });
-    //
     TestRail.prototype.closeRun = function () {
         this.runId = TestRailCache.retrieve('runId');
         axios({

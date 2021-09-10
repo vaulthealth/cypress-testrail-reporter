@@ -74,7 +74,6 @@ var CypressTestRailReporter = /** @class */ (function (_super) {
          * runner will not be triggered
          */
         if (_this.suiteId && _this.suiteId.toString().length) {
-            console.debug(runner);
             runner.on('start', function () {
                 /**
                 * runCounter is used to count how many spec files we have during one run
