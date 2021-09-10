@@ -179,7 +179,7 @@ var TestRail = /** @class */ (function () {
     // This function will attach failed screenshot on each test result(comment) if founds it
     TestRail.prototype.uploadScreenshots = function (caseId, resultId) {
         var _this = this;
-        var SCREENSHOTS_FOLDER_PATH = path.join(__dirname, 'cypress/screenshots');
+        var SCREENSHOTS_FOLDER_PATH = path.join(__dirname, '../../../screenshots');
         fs.readdir(SCREENSHOTS_FOLDER_PATH, function (err, folders) {
             console.log("Found screenshots for following sections:");
             console.debug(folders);
