@@ -1,9 +1,5 @@
 # TestRail Reporter for Cypress
 
-[![version](https://img.shields.io/npm/v/cypress-testrail-reporter.svg)](https://www.npmjs.com/package/@mncharlton/cypress-testrail-reporter)
-[![downloads](https://img.shields.io/npm/dt/cypress-testrail-reporter.svg)](https://www.npmjs.com/package/@mncharlton/cypress-testrail-reporter)
-[![MIT License](https://img.shields.io/github/license/Vivify-Ideas/cypress-testrail-reporter.svg)](https://github.com/mncharlton/cypress-testrail-reporter/blob/master/LICENSE.md)
-
 Publishes [Cypress](https://www.cypress.io/) runs on TestRail.
 
 Core features:
@@ -129,23 +125,3 @@ If you maintain your own TestRail instance on your own server, it is recommended
 For TestRail hosted accounts maintained by [Gurock](http://www.gurock.com/), all accounts will automatically use HTTPS.
 
 You can read the whole TestRail documentation [here](http://docs.gurock.com/).
-
-## Author
-
-Matt Charlton- [github](https://github.com/mncharlton)
-
-## Core contributors
-
-- [Milutin Savovic](https://github.com/mickosav)
-- [Anes Topcic](https://github.com/sakalaca)
-- [FFdhorkin](https://github.com/FFdhorkin)
-
-## License
-
-This project is licensed under the [MIT license](/LICENSE.md).
-
-## Acknowledgments
-
-- [Pierre Awaragi](https://github.com/awaragi), owner of the [mocha-testrail-reporter](https://github.com/awaragi/mocha-testrail-reporter) repository that was forked.
-- [Valerie Thoma](https://github.com/ValerieThoma) and [Aileen Santos](https://github.com/asantos3026) for proofreading the README.md file and making it more understandable.
-- [Milutin Savovic](https://github.com/mickosav), creater of the the original [cypress-testrail-reporter](https://github.com/Vivify-Ideas/cypress-testrail-reporter)
