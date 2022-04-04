@@ -140,7 +140,6 @@ export class TestRail {
 
   public publishResults(results: TestRailResult[]) {
     this.runId = TestRailCache.retrieve('runId');
-    console.log('11111')
     return axios({
         method: 'post',
         url: `${this.base}/add_results_for_cases/${this.runId}`,
