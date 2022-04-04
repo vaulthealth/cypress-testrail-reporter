@@ -17,7 +17,6 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CypressTestRailReporter = void 0;
 var mocha_1 = require("mocha");
-var moment = require("moment");
 var testrail_1 = require("./testrail");
 var shared_1 = require("./shared");
 var testrail_interface_1 = require("./testrail.interface");
@@ -25,7 +24,10 @@ var testrail_validation_1 = require("./testrail.validation");
 var TestRailCache = require('./testrail.cache');
 var TestRailLogger = require('./testrail.logger');
 var chalk = require('chalk');
+var moment = require('moment');
+
 var runCounter = 1;
+
 var CypressTestRailReporter = /** @class */ (function (_super) {
     __extends(CypressTestRailReporter, _super);
     function CypressTestRailReporter(runner, options) {
@@ -34,6 +36,7 @@ var CypressTestRailReporter = /** @class */ (function (_super) {
         _this.suiteId = [];
         _this.serverTestCaseIds = [];
         _this.reporterOptions = options.reporterOptions;
+        _this.runId = 0;
         if (process.env.CYPRESS_TESTRAIL_REPORTER_USERNAME) {
             _this.reporterOptions.username = process.env.CYPRESS_TESTRAIL_REPORTER_USERNAME;
         }
@@ -85,33 +88,42 @@ var CypressTestRailReporter = /** @class */ (function (_super) {
                 * unless a cached value already exists for an existing TestRail Run in
                 * which case that will be used and no new one created.
                 */
-                if (!TestRailCache.retrieve('runId')) {
-                    TestRailLogger.warn('Starting with following options: ');
-                    console.debug(_this.reporterOptions);
-                    if (_this.reporterOptions.suiteId) {
-                        TestRailLogger.log("Following suiteId has been set in cypress.json file: " + _this.suiteId);
-                    }
-                    var executionDateTime = moment().format('LLLL');
+                _this.testRailApi.getRuns().then(function () {
+                    var executionDateTime = moment().format('dddd, MMMM Do YYYY');
                     var name_1 = (_this.reporterOptions.runName || 'Automated regression test run for') + " " + executionDateTime;
-                    if (_this.reporterOptions.disableDescription) {
-                        var description = '';
-                    }
-                    else {
-                        if (process.env.CYPRESS_CI_JOB_URL) {
-                            var description = process.env.CYPRESS_CI_JOB_URL;
+                    if (_this.testRailApi.runIds.some(run => run["name"] == name_1) == false) {
+                        TestRailLogger.warn('Starting with following options: ');
+                        console.debug(_this.reporterOptions);
+                        if (_this.reporterOptions.suiteId) {
+                            TestRailLogger.log("Following suiteId has been set in cypress.json file: " + _this.suiteId);
+                        }
+                        if (_this.reporterOptions.disableDescription) {
+                            var description = '';
                         }
                         else {
-                            var description = 'For the Cypress run visit https://dashboard.cypress.io/#/projects/runs';
+                            if (process.env.CYPRESS_CI_JOB_URL) {
+                                var description = process.env.CYPRESS_CI_JOB_URL;
+                            }
+                            else {
+                                var description = 'For the Cypress run visit https://dashboard.cypress.io/#/projects/runs';
+                            }
                         }
+                        TestRailLogger.log("Creating TestRail Run with name: " + name_1);
+                        _this.testRailApi.createRun(name_1, description, _this.suiteId);
                     }
-                    TestRailLogger.log("Creating TestRail Run with name: " + name_1);
-                    _this.testRailApi.createRun(name_1, description, _this.suiteId);
-                }
-                else {
-                    // use the cached TestRail Run ID
-                    _this.runId = TestRailCache.retrieve('runId');
-                    TestRailLogger.log("Using existing TestRail Run with ID: '" + _this.runId + "'");
-                }
+                    else {
+                        /* 
+                        look for the run id of run with name that already exists
+                        */
+                        for (var _runObj of _this.testRailApi.runIds) { 
+                            if (_runObj["name"] == name_1) { 
+                                _this.runId = _runObj["id"]
+                                break;
+                            }
+                        }
+                        TestRailLogger.log("Using existing TestRail Run with ID: '" + _this.runId + "'");
+                    }
+                });
             });
             runner.on('pass', function (test) {
                 _this.submitResults(testrail_interface_1.Status.Passed, test, "Execution time: " + test.duration + "ms");
@@ -133,14 +145,19 @@ var CypressTestRailReporter = /** @class */ (function (_super) {
      */
     CypressTestRailReporter.prototype.submitResults = function (status, test, comment) {
         var _this = this;
+        if (_this.runId === 0) {
+            _this.runId = TestRailCache.retrieve('runId')
+        } 
         var caseIds = shared_1.titleToCaseIds(test.title);
         if (caseIds.length) {
             caseIds.map(function (caseId) {
                 _this.testRailApi.publishResult({
+                    run_id: _this.runId,
                     case_id: caseId,
                     status_id: status,
                     comment: "Execution time: " + test.duration + "ms, case_id: " + caseId,
-                }).then(function (response) {
+                })
+                .then(function (response) {
                     if (_this.reporterOptions.allowFailedScreenshotUpload === true && (status === testrail_interface_1.Status.Failed || status === testrail_interface_1.Status.Retest)) {
                         _this.testRailApi.uploadScreenshots(caseId, response[0].id);
                     }

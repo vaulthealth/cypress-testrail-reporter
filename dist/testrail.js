@@ -23,8 +23,9 @@ var TestRail = /** @class */ (function () {
         this.options = options;
         this.includeAll = true;
         this.caseIds = [];
+        this.runIds = [];
         this.base = options.host + "/index.php?/api/v2";
-        this.runId;
+        this.runId = 0;
     }
     TestRail.prototype.getCases = function (suiteId, nextURL, cases, resolve, reject) {
         var _this = this;
@@ -67,8 +68,28 @@ var TestRail = /** @class */ (function () {
             reject([]);
         });
     };
-    TestRail.prototype.createRun = function (name, description, suiteId) {
+    TestRail.prototype.getRuns = function () {
+        console.log("Getting runs...")
         var _this = this;
+        return axios({
+            method:'get',
+            url: this.base + "/get_runs/" + this.options.projectId,
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-api-ident': 'beta'
+            },
+            auth: {
+                username: this.options.username,
+                password: this.options.password
+            }
+          })
+            .then(function (response) {
+                _this.runIds = response.data.runs;
+                return _this.runIds;
+            })
+            .catch(function (error) { return console.error("ERROR", error); });
+    };
+    TestRail.prototype.createRun = function (name, description, suiteId) {
         if (this.options.includeAllInTestRun === false) {
             this.includeAll = false;
             new Promise(function (resolve, reject) {
@@ -81,12 +102,13 @@ var TestRail = /** @class */ (function () {
             });
         }
         else {
-            this.addRun(name, description, suiteId);
+            this.addRun(name, description, suiteId)
         }
     };
     TestRail.prototype.addRun = function (name, description, suiteId) {
+        console.log("Adding Run...");
         var _this = this;
-        axios({
+        return axios({
             method: 'post',
             url: this.base + "/add_run/" + this.options.projectId,
             headers: { 'Content-Type': 'application/json' },
@@ -123,6 +145,7 @@ var TestRail = /** @class */ (function () {
     };
     TestRail.prototype.publishResults = function (results) {
         this.runId = TestRailCache.retrieve('runId');
+        console.log('11111')
         return axios({
             method: 'post',
             url: this.base + "/add_results_for_cases/" + this.runId,
@@ -139,8 +162,7 @@ var TestRail = /** @class */ (function () {
         });
     };
     TestRail.prototype.publishResult = function (results) {
-        this.runId = TestRailCache.retrieve('runId');
-        return axios.post(this.base + "/add_results_for_cases/" + this.runId, {
+        return axios.post(this.base + "/add_results_for_cases/" + results.run_id, {
             results: [{ case_id: results.case_id, status_id: results.status_id, comment: results.comment }],
         }, {
             auth: {
