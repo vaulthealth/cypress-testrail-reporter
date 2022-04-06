@@ -4,14 +4,16 @@ const path = require('path');
 const FormData = require('form-data');
 const TestRailLogger = require('./testrail.logger');
 const TestRailCache = require('./testrail.cache');
+import { RSA_NO_PADDING } from 'constants';
 import { TestRailOptions, TestRailResult } from './testrail.interface';
 
 export class TestRail {
   private base: String;
-  private runId: Number;
+  private runId: Number = 0;
   private includeAll: Boolean = true;
   private caseIds: Number[] = [];
   private retries: number;
+  public runIds: Number[] = [];
 
   constructor(private options: TestRailOptions) {
     this.base = `${options.host}/index.php?/api/v2`;
@@ -59,10 +61,31 @@ export class TestRail {
       })
   }
 
+  public getRuns() {
+    console.log("Getting runs...")
+    return axios({
+      method:'get',
+      url: `${this.base}/get_runs/${this.options.projectId}`,
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-api-ident': 'beta'
+      },
+      auth: {
+          username: this.options.username,
+          password: this.options.password
+      }
+    })
+    .then((response) => {
+      this.runIds = response.data.runs;
+      return this.runIds
+    })
+    .catch((error) => { return console.error("ERROR", error)});
+  }
+
   public createRun (name: string, description: string, suiteId: number) {
     if (this.options.includeAllInTestRun === false){
       this.includeAll = false;
-
+      
       new Promise<Number[]>((resolve, reject) => {
         this.getCases(suiteId, null, [], resolve, reject)}).then(response => {
           console.log('Creating run with following cases:');
@@ -70,13 +93,15 @@ export class TestRail {
           this.caseIds = response;
           this.addRun(name, description, suiteId);
         })
-    } else {
-      this.addRun(name, description, suiteId);
+      } 
+      else {
+        this.addRun(name, description, suiteId)
+      }
     }
-  }
-
+    
   public addRun(name: string, description: string, suiteId: number) {
-    axios({
+    console.log("Adding Run...");
+    return axios({
       method: 'post',
       url: `${this.base}/add_run/${this.options.projectId}`,
       headers: { 'Content-Type': 'application/json' },
@@ -97,7 +122,7 @@ export class TestRail {
         // cache the TestRail Run ID
         TestRailCache.store('runId', this.runId);
     })
-    .catch(error => console.error(error));
+    .catch(error => {console.error(error)});
   }
 
   public deleteRun() {
@@ -132,9 +157,8 @@ export class TestRail {
   }
 
   public publishResult(results: TestRailResult){
-    this.runId = TestRailCache.retrieve('runId');
     return axios.post(
-      `${this.base}/add_results_for_cases/${this.runId}`,
+      `${this.base}/add_results_for_cases/${results.run_id}`,
       {
         results: [{ case_id: results.case_id, status_id: results.status_id, comment: results.comment }],
       },
