@@ -72,6 +72,12 @@ var CypressTestRailReporter = /** @class */ (function (_super) {
         if (cliArguments && cliArguments.length) {
             _this.suiteId = cliArguments;
         }
+
+        var platformSuiteIds = {
+            "MONOREPO": 64,
+            "LS": 535
+        }
+
         /**
          * If no suiteId has been passed with previous two methods
          * runner will not be triggered
@@ -90,7 +96,12 @@ var CypressTestRailReporter = /** @class */ (function (_super) {
                 */
                 _this.testRailApi.getRuns().then(function () {
                     var executionDateTime = moment().format('dddd, MMMM Do YYYY');
-                    var name_1 = (_this.reporterOptions.runName || 'Automated regression test run for') + " " + executionDateTime;
+                    let name_1 = ""
+                    if (_this.suiteId === platformSuiteIds["MONOREPO"]) {
+                        name_1 = (_this.reporterOptions.runName || 'Automated regression test run for') + " " + executionDateTime;
+                    } else if (_this.suiteId === platformSuiteIds["LS"]) {
+                        name_1 = (_this.reporterOptions.runName || 'LS - Automated regression test run for') + " " + executionDateTime;
+                    }
                     if (_this.testRailApi.runIds.some(run => run["name"] == name_1) == false) {
                         TestRailLogger.warn('Starting with following options: ');
                         console.debug(_this.reporterOptions);
