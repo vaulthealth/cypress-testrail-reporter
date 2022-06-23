@@ -65,6 +65,11 @@ export class CypressTestRailReporter extends reporters.Spec {
       this.suiteId = cliArguments
     }
 
+    const platformSuiteIds = {
+      "MONOREPO": 64,
+      "LS": 535
+    }
+
     /**
      * If no suiteId has been passed with previous two methods
      * runner will not be triggered
@@ -83,8 +88,12 @@ export class CypressTestRailReporter extends reporters.Spec {
         */
         this.testRailApi.getRuns().then((res) => {
           const executionDateTime = moment().format('dddd, MMMM Do YYYY');
-          const name = `${this.reporterOptions.runName || 'Automated regression test run for'} ${executionDateTime}`;
-          // if (!TestRailCache.retrieve('runId')) {
+          let name = ""
+          if (this.suiteId === platformSuiteIds["MONOREPO"]) {
+            name = `${this.reporterOptions.runName || 'Automated regression test run for'} ${executionDateTime}`;
+          } else if (this.suiteId === platformSuiteIds["LS"]) {
+            name = `${this.reporterOptions.runName || 'LS - Automated regression test run for'} ${executionDateTime}`;
+          }
           if (this.testRailApi.runIds.some(run => run["name"] == name) == false) {
             TestRailLogger.warn('Starting with following options: ')
             console.debug(this.reporterOptions)
