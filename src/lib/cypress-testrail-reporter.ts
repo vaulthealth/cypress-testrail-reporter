@@ -3,6 +3,8 @@ import { TestRail } from './testrail';
 import { titleToCaseIds } from './shared';
 import { Status, TestRailResult } from './testrail.interface';
 import { TestRailValidation } from './testrail.validation';
+import { PLATFORM_SUITE } from "./platform-suites";
+
 const TestRailCache = require('./testrail.cache');
 const TestRailLogger = require('./testrail.logger');
 import chalk = require('chalk');
@@ -65,11 +67,6 @@ export class CypressTestRailReporter extends reporters.Spec {
       this.suiteId = cliArguments
     }
 
-    const platformSuiteIds = {
-      "MONOREPO": 64,
-      "LS": 535
-    }
-
     /**
      * If no suiteId has been passed with previous two methods
      * runner will not be triggered
@@ -87,31 +84,26 @@ export class CypressTestRailReporter extends reporters.Spec {
         * which case that will be used and no new one created.
         */
         this.testRailApi.getRuns().then((res) => {
-          const executionDateTime = moment().format('dddd, MMMM Do YYYY');
-          let name = ""
-          if (this.suiteId === platformSuiteIds["MONOREPO"]) {
-            name = `${this.reporterOptions.runName || 'Automated regression test run for'} ${executionDateTime}`;
-          } else if (this.suiteId === platformSuiteIds["LS"]) {
-            name = `${this.reporterOptions.runName || 'LS - Automated regression test run for'} ${executionDateTime}`;
-          }
+          let name = generateSuiteName(this.suiteId, this.reporterOptions.runName)
+
           if (this.testRailApi.runIds.some(run => run["name"] == name) == false) {
             TestRailLogger.warn('Starting with following options: ')
             console.debug(this.reporterOptions)
-              if (this.reporterOptions.suiteId) {
-                TestRailLogger.log(`Following suiteId has been set in cypress.json file: ${this.suiteId}`);
-              }
-              if (this.reporterOptions.disableDescription) {
-                var description = '';
+            if (this.reporterOptions.suiteId) {
+              TestRailLogger.log(`Following suiteId has been set in cypress.json file: ${this.suiteId}`);
+            }
+            if (this.reporterOptions.disableDescription) {
+              var description = '';
+            } else {
+              if (process.env.CYPRESS_CI_JOB_URL) {
+                var description = process.env.CYPRESS_CI_JOB_URL;
               } else {
-                if (process.env.CYPRESS_CI_JOB_URL) {
-                  var description = process.env.CYPRESS_CI_JOB_URL;
-                } else {
-                  var description = 'For the Cypress run visit https://dashboard.cypress.io/#/projects/runs';
-                }
+                var description = 'For the Cypress run visit https://dashboard.cypress.io/#/projects/runs';
               }
-              TestRailLogger.log(`Creating TestRail Run with name: ${name}`);
-              this.testRailApi.createRun(name, description, this.suiteId);
-          } 
+            }
+            TestRailLogger.log(`Creating TestRail Run with name: ${name}`);
+            this.testRailApi.createRun(name, description, this.suiteId);
+          }
           else {
             /* 
             look for the run id of run with name that already exists
@@ -147,10 +139,10 @@ export class CypressTestRailReporter extends reporters.Spec {
    * to upload failed screenshot for easier debugging in TestRail
    * Note: Uploading of screenshot is configurable option
    */
-  public submitResults (status, test, comment) {
+  public submitResults(status, test, comment) {
     if (this.runId === 0) {
       this.runId = TestRailCache.retrieve('runId')
-    } 
+    }
     let caseIds = titleToCaseIds(test.title)
     if (caseIds.length) {
       caseIds.map(caseId => {
@@ -160,12 +152,32 @@ export class CypressTestRailReporter extends reporters.Spec {
           status_id: status,
           comment: `Execution time: ${test.duration}ms, case_id: ${caseId}`,
         })
-        .then((response) => {
-          if (this.reporterOptions.allowFailedScreenshotUpload === true && (status === Status.Failed || status === Status.Retest)) {
-            this.testRailApi.uploadScreenshots(caseId, response[0].id);
-         }
-        })
+          .then((response) => {
+            if (this.reporterOptions.allowFailedScreenshotUpload === true && (status === Status.Failed || status === Status.Retest)) {
+              this.testRailApi.uploadScreenshots(caseId, response[0].id);
+            }
+          })
       });
     }
   }
+}
+
+/**
+ * Decide which suite name should be assigned 
+ * @param suiteId current Suite running
+ * @param runName 
+ * @returns 
+ */
+export function generateSuiteName(suiteId, runName?): string {
+  const baseSuiteName = 'Automated regression test run for';
+  const executionDateTime = moment().format('dddd, MMMM Do YYYY');
+  let name = ""
+  if (suiteId == PLATFORM_SUITE.MONOREPO) {
+    name = `${runName || `${baseSuiteName}`} ${executionDateTime}`;
+  } else if (suiteId == PLATFORM_SUITE.LIFE_SCIENCES) {
+    name = `${runName || `LS - ${baseSuiteName}`} ${executionDateTime}`;
+  } else {
+    name = `${runName || `Unknown Suite: ${baseSuiteName}`} ${executionDateTime}`;
+  }
+  return name
 }

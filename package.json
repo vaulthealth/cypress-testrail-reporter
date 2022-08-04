@@ -19,6 +19,7 @@
     "url": "https://github.com/add_git"
   },
   "scripts": {
+    "test": "mocha '*/test/*.js'",
     "tsc": "tsc",
     "clean": "rimraf dist",
     "build": "npm run clean && npm run tsc"
