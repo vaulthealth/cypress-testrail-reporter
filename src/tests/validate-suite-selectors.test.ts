@@ -1,4 +1,5 @@
 import { generateSuiteName } from "../lib/cypress-testrail-reporter";
+import { PLATFORM_SUITE } from "../lib/platform-suites";
 import * as moment from 'moment';
 
 const currentDate = moment().format('dddd, MMMM Do YYYY')

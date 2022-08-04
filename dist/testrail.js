@@ -21,26 +21,27 @@ var TestRailCache = require('./testrail.cache');
 var TestRail = /** @class */ (function () {
     function TestRail(options) {
         this.options = options;
+        this.runId = 0;
         this.includeAll = true;
         this.caseIds = [];
         this.runIds = [];
-        this.base = options.host + "/index.php?/api/v2";
-        this.runId = 0;
+        this.base = "".concat(options.host, "/index.php?/api/v2");
+        this.runId;
     }
     TestRail.prototype.getCases = function (suiteId, nextURL, cases, resolve, reject) {
         var _this = this;
-        var url = this.base + "/get_cases/" + this.options.projectId + "&suite_id=" + suiteId;
+        var url = "".concat(this.base, "/get_cases/").concat(this.options.projectId, "&suite_id=").concat(suiteId);
         if (nextURL) {
             url += nextURL;
         }
         if (this.options.groupId) {
-            url += "&section_id=" + this.options.groupId;
+            url += "&section_id=".concat(this.options.groupId);
         }
         if (this.options.filter) {
-            url += "&filter=" + this.options.filter;
+            url += "&filter=".concat(this.options.filter);
         }
         if (this.options.typeId) {
-            url += "&type_id=" + this.options.typeId;
+            url += "&type_id=".concat(this.options.typeId);
         }
         return axios({
             method: 'get',
@@ -69,12 +70,12 @@ var TestRail = /** @class */ (function () {
         });
     };
     TestRail.prototype.getRuns = function () {
-        console.log("Getting runs...")
         var _this = this;
+        console.log("Getting runs...");
         return axios({
-            method:'get',
-            url: this.base + "/get_runs/" + this.options.projectId,
-            headers: { 
+            method: 'get',
+            url: "".concat(this.base, "/get_runs/").concat(this.options.projectId),
+            headers: {
                 'Content-Type': 'application/json',
                 'x-api-ident': 'beta'
             },
@@ -82,14 +83,15 @@ var TestRail = /** @class */ (function () {
                 username: this.options.username,
                 password: this.options.password
             }
-          })
+        })
             .then(function (response) {
-                _this.runIds = response.data.runs;
-                return _this.runIds;
-            })
+            _this.runIds = response.data.runs;
+            return _this.runIds;
+        })
             .catch(function (error) { return console.error("ERROR", error); });
     };
     TestRail.prototype.createRun = function (name, description, suiteId) {
+        var _this = this;
         if (this.options.includeAllInTestRun === false) {
             this.includeAll = false;
             new Promise(function (resolve, reject) {
@@ -102,15 +104,15 @@ var TestRail = /** @class */ (function () {
             });
         }
         else {
-            this.addRun(name, description, suiteId)
+            this.addRun(name, description, suiteId);
         }
     };
     TestRail.prototype.addRun = function (name, description, suiteId) {
-        console.log("Adding Run...");
         var _this = this;
+        console.log("Adding Run...");
         return axios({
             method: 'post',
-            url: this.base + "/add_run/" + this.options.projectId,
+            url: "".concat(this.base, "/add_run/").concat(this.options.projectId),
             headers: { 'Content-Type': 'application/json' },
             auth: {
                 username: this.options.username,
@@ -129,13 +131,13 @@ var TestRail = /** @class */ (function () {
             // cache the TestRail Run ID
             TestRailCache.store('runId', _this.runId);
         })
-            .catch(function (error) { return console.error(error); });
+            .catch(function (error) { console.error(error); });
     };
     TestRail.prototype.deleteRun = function () {
         this.runId = TestRailCache.retrieve('runId');
         axios({
             method: 'post',
-            url: this.base + "/delete_run/" + this.runId,
+            url: "".concat(this.base, "/delete_run/").concat(this.runId),
             headers: { 'Content-Type': 'application/json' },
             auth: {
                 username: this.options.username,
@@ -147,7 +149,7 @@ var TestRail = /** @class */ (function () {
         this.runId = TestRailCache.retrieve('runId');
         return axios({
             method: 'post',
-            url: this.base + "/add_results_for_cases/" + this.runId,
+            url: "".concat(this.base, "/add_results_for_cases/").concat(this.runId),
             headers: { 'Content-Type': 'application/json' },
             auth: {
                 username: this.options.username,
@@ -161,7 +163,7 @@ var TestRail = /** @class */ (function () {
         });
     };
     TestRail.prototype.publishResult = function (results) {
-        return axios.post(this.base + "/add_results_for_cases/" + results.run_id, {
+        return axios.post("".concat(this.base, "/add_results_for_cases/").concat(results.run_id), {
             results: [{ case_id: results.case_id, status_id: results.status_id, comment: results.comment }],
         }, {
             auth: {
@@ -182,7 +184,7 @@ var TestRail = /** @class */ (function () {
         form.append('attachment', fs.createReadStream(path));
         axios({
             method: 'post',
-            url: this.base + "/add_attachment_to_result/" + resultId,
+            url: "".concat(this.base, "/add_attachment_to_result/").concat(resultId),
             headers: __assign({}, form.getHeaders()),
             auth: {
                 username: this.options.username,
@@ -208,19 +210,19 @@ var TestRail = /** @class */ (function () {
                 return console.log('Unable to scan screenshots folder: ' + err);
             }
             folders.forEach(function (folder) {
-                fs.readdir(SCREENSHOTS_FOLDER_PATH + ("/" + folder), function (err, spec) {
+                fs.readdir(SCREENSHOTS_FOLDER_PATH + "/".concat(folder), function (err, spec) {
                     if (err) {
                         return console.log('Unable to scan screenshots folder: ' + err);
                     }
                     spec.forEach(function (spec) {
-                        fs.readdir(SCREENSHOTS_FOLDER_PATH + ("/" + folder + "/" + spec), function (err, file) {
+                        fs.readdir(SCREENSHOTS_FOLDER_PATH + "/".concat(folder, "/").concat(spec), function (err, file) {
                             if (err) {
                                 return console.log('Unable to scan screenshots folder: ' + err);
                             }
                             console.log("Found following screenshots");
                             console.debug(file);
                             file.forEach(function (file) {
-                                if (file.includes("C" + caseId) && /(failed|attempt)/g.test(file)) {
+                                if (file.includes("C".concat(caseId)) && /(failed|attempt)/g.test(file)) {
                                     try {
                                         _this.uploadAttachment(resultId, SCREENSHOTS_FOLDER_PATH + '/' + folder + '/' + spec + '/' + file);
                                     }
@@ -240,7 +242,7 @@ var TestRail = /** @class */ (function () {
         this.runId = TestRailCache.retrieve('runId');
         axios({
             method: 'post',
-            url: this.base + "/close_run/" + this.runId,
+            url: "".concat(this.base, "/close_run/").concat(this.runId),
             headers: { 'Content-Type': 'application/json' },
             auth: {
                 username: this.options.username,

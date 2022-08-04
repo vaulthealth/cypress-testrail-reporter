@@ -7,6 +7,7 @@ const TestRailCache = require('./testrail.cache');
 const TestRailLogger = require('./testrail.logger');
 import chalk = require('chalk');
 import moment = require('moment');
+import {PLATFORM_SUITE} from "./platform-suites";
 var runCounter = 1;
 
 export class CypressTestRailReporter extends reporters.Spec {
