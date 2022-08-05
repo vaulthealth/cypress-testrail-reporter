@@ -125,3 +125,9 @@ If you maintain your own TestRail instance on your own server, it is recommended
 For TestRail hosted accounts maintained by [Gurock](http://www.gurock.com/), all accounts will automatically use HTTPS.
 
 You can read the whole TestRail documentation [here](http://docs.gurock.com/).
+
+## Running JEST Tests
+```bash
+npm install
+npm run test
+```
